@@ -5,235 +5,83 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Exercise Tracker</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
             padding: 20px;
         }
-
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            background: white;
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        }
-
-        h1 {
-            text-align: center;
-            color: #4a5568;
-            margin-bottom: 30px;
-            font-size: 2.5em;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        h2 {
-            color: #4a5568;
-            margin-bottom: 15px;
-            border-bottom: 2px solid #e2e8f0;
-            padding-bottom: 8px;
-        }
-
         .form-section {
-            margin: 30px 0;
-            padding: 25px;
-            background: #f7fafc;
-            border-radius: 10px;
-            border: 1px solid #e2e8f0;
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
         }
-
-        form {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
+        input, button {
+            padding: 8px;
+            margin: 5px;
         }
-
-        input {
-            padding: 12px;
-            border: 2px solid #cbd5e0;
-            border-radius: 6px;
-            font-size: 16px;
-            transition: border-color 0.3s;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
         button {
-            padding: 12px 24px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: #007bff;
             color: white;
             border: none;
-            border-radius: 6px;
+            border-radius: 3px;
             cursor: pointer;
-            font-size: 16px;
-            font-weight: 600;
-            transition: transform 0.2s;
         }
-
-        button:hover {
-            transform: translateY(-2px);
-        }
-
-        .filter-options {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 10px;
-        }
-
-        .success, .error {
-            padding: 15px;
-            border-radius: 6px;
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 3px;
             margin: 10px 0;
         }
-
-        .success {
-            background: #c6f6d5;
-            border: 1px solid #48bb78;
-            color: #22543d;
-        }
-
         .error {
-            background: #fed7d7;
-            border: 1px solid #f56565;
-            color: #742a2a;
-        }
-
-        .users-list {
-            margin-top: 15px;
-        }
-
-        .users-list ul {
-            list-style: none;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-
-        .users-list li {
-            padding: 8px;
-            margin: 5px 0;
-            background: white;
-            border-radius: 4px;
-            border: 1px solid #e2e8f0;
-        }
-
-        .instructions {
-            background: #2d3748;
-            color: white;
-            padding: 25px;
-            border-radius: 10px;
-            margin-top: 30px;
-        }
-
-        .instructions h2 {
-            color: white;
-            border-bottom-color: #4a5568;
-        }
-
-        code {
-            background: #4a5568;
-            color: #e2e8f0;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-family: 'Courier New', monospace;
-            display: block;
-            margin: 8px 0;
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                padding: 20px;
-            }
-            
-            .filter-options {
-                grid-template-columns: 1fr;
-            }
+            background: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 3px;
+            margin: 10px 0;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Exercise Tracker</h1>
-        
-        <!-- 創建用戶表單 -->
-        <section class="form-section">
-            <h2>Create a New User</h2>
-            <form id="userForm">
-                <input type="text" id="username" name="username" placeholder="Username" required>
-                <button type="submit">Create User</button>
-            </form>
-            <div id="userResult"></div>
-        </section>
+    <h1>Exercise Tracker</h1>
+    
+    <div class="form-section">
+        <h2>Create User</h2>
+        <form id="userForm">
+            <input type="text" id="username" placeholder="Username" required>
+            <button type="submit">Create User</button>
+        </form>
+        <div id="userResult"></div>
+    </div>
 
-        <!-- 添加運動記錄表單 -->
-        <section class="form-section">
-            <h2>Add Exercises</h2>
-            <form id="exerciseForm">
-                <input type="text" id="userId" name="userId" placeholder="User ID" required>
-                <input type="text" id="description" name="description" placeholder="Description*" required>
-                <input type="number" id="duration" name="duration" placeholder="Duration (minutes)*" required>
-                <input type="date" id="date" name="date" placeholder="Date (yyyy-mm-dd)">
-                <button type="submit">Add Exercise</button>
-            </form>
-            <div id="exerciseResult"></div>
-        </section>
+    <div class="form-section">
+        <h2>Add Exercise</h2>
+        <form id="exerciseForm">
+            <input type="text" id="userId" placeholder="User ID" required>
+            <input type="text" id="description" placeholder="Description" required>
+            <input type="number" id="duration" placeholder="Duration (minutes)" required>
+            <input type="date" id="date" placeholder="Date (optional)">
+            <button type="submit">Add Exercise</button>
+        </form>
+        <div id="exerciseResult"></div>
+    </div>
 
-        <!-- 查看運動記錄 -->
-        <section class="form-section">
-            <h2>View Exercise Log</h2>
-            <form id="logForm">
-                <input type="text" id="logUserId" name="userId" placeholder="User ID" required>
-                <div class="filter-options">
-                    <input type="date" id="from" name="from" placeholder="From (yyyy-mm-dd)">
-                    <input type="date" id="to" name="to" placeholder="To (yyyy-mm-dd)">
-                    <input type="number" id="limit" name="limit" placeholder="Limit">
-                </div>
-                <button type="submit">View Log</button>
-            </form>
-            <div id="logResult"></div>
-        </section>
-
-        <!-- 用戶列表 -->
-        <section class="form-section">
-            <h2>All Users</h2>
-            <button onclick="loadUsers()">Load Users</button>
-            <div id="usersList"></div>
-        </section>
-
-        <!-- 使用說明 -->
-        <section class="instructions">
-            <h2>API Usage Examples:</h2>
-            <div class="example">
-                <h3>Create User:</h3>
-                <code>POST /api/users</code>
-                <p>Body: username=fcc_test</p>
-                
-                <h3>Add Exercise:</h3>
-                <code>POST /api/users/:_id/exercises</code>
-                <p>Body: description=test, duration=60, date=1990-01-01</p>
-                
-                <h3>Get Log:</h3>
-                <code>GET /api/users/:_id/logs?from=1990-01-01&to=1990-01-31&limit=5</code>
-            </div>
-        </section>
+    <div class="form-section">
+        <h2>Get Exercise Log</h2>
+        <form id="logForm">
+            <input type="text" id="logUserId" placeholder="User ID" required>
+            <input type="date" id="from" placeholder="From (optional)">
+            <input type="date" id="to" placeholder="To (optional)">
+            <input type="number" id="limit" placeholder="Limit (optional)">
+            <button type="submit">Get Log</button>
+        </form>
+        <div id="logResult"></div>
     </div>
 
     <script>
-        // 創建用戶
+        // Create User
         document.getElementById('userForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const username = document.getElementById('username').value;
@@ -260,7 +108,7 @@
             }
         });
 
-        // 添加運動記錄
+        // Add Exercise
         document.getElementById('exerciseForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(e.target);
@@ -292,7 +140,7 @@
             }
         });
 
-        // 查看運動記錄
+        // Get Log
         document.getElementById('logForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(e.target);
@@ -336,26 +184,6 @@
                 `;
             }
         });
-
-        // 加載用戶列表
-        async function loadUsers() {
-            try {
-                const response = await fetch('/api/users');
-                const users = await response.json();
-                
-                let usersHTML = '<div class="users-list"><h3>Registered Users:</h3><ul>';
-                users.forEach(user => {
-                    usersHTML += `<li>${user.username} (ID: ${user._id})</li>`;
-                });
-                usersHTML += '</ul></div>';
-                
-                document.getElementById('usersList').innerHTML = usersHTML;
-            } catch (error) {
-                document.getElementById('usersList').innerHTML = `
-                    <div class="error">Error: ${error.message}</div>
-                `;
-            }
-        }
     </script>
 </body>
 </html>
