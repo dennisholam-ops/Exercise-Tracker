@@ -10,20 +10,16 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
-// 連接 MongoDB (如果用 MongoDB Atlas，請設置 MONGODB_URI 環境變量)
-const MONGO_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/exercise-tracker';
-mongoose.connect(MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-});
+// MongoDB 連接 (Vercel 環境變量)
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/exercise-tracker';
 
-// 數據模型定義
+// 數據模型
 const UserSchema = new mongoose.Schema({
-  username: { type: String, required: true, unique: true }
+  username: { type: String, required: true }
 });
 
 const ExerciseSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  userId: { type: String, required: true },
   description: { type: String, required: true },
   duration: { type: Number, required: true },
   date: { type: Date, default: Date.now }
@@ -32,26 +28,37 @@ const ExerciseSchema = new mongoose.Schema({
 const User = mongoose.model('User', UserSchema);
 const Exercise = mongoose.model('Exercise', ExerciseSchema);
 
-// 路由定義
+// 連接數據庫
+let isConnected = false;
+const connectDB = async () => {
+  if (isConnected) return;
+  
+  try {
+    await mongoose.connect(MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    isConnected = true;
+    console.log('MongoDB connected successfully');
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+  }
+};
 
 // 首頁
 app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/views/index.html');
+  res.sendFile(__dirname + '/public/index.html');
 });
 
-// 1. 創建新用戶
+// 1. 創建新用戶 - POST /api/users
 app.post('/api/users', async (req, res) => {
+  await connectDB();
+  
   try {
     const { username } = req.body;
     
     if (!username) {
       return res.status(400).json({ error: 'Username is required' });
-    }
-    
-    // 檢查用戶名是否已存在
-    const existingUser = await User.findOne({ username });
-    if (existingUser) {
-      return res.json(existingUser);
     }
     
     // 創建新用戶
@@ -60,25 +67,41 @@ app.post('/api/users', async (req, res) => {
     
     res.json({
       username: newUser.username,
-      _id: newUser._id
+      _id: newUser._id.toString()
     });
   } catch (error) {
+    if (error.code === 11000) {
+      // 用戶名已存在，返回現有用戶
+      const existingUser = await User.findOne({ username: req.body.username });
+      return res.json({
+        username: existingUser.username,
+        _id: existingUser._id.toString()
+      });
+    }
     res.status(500).json({ error: 'Server error' });
   }
 });
 
-// 2. 獲取所有用戶
+// 2. 獲取所有用戶 - GET /api/users
 app.get('/api/users', async (req, res) => {
+  await connectDB();
+  
   try {
     const users = await User.find({}, 'username _id');
-    res.json(users);
+    const formattedUsers = users.map(user => ({
+      username: user.username,
+      _id: user._id.toString()
+    }));
+    res.json(formattedUsers);
   } catch (error) {
     res.status(500).json({ error: 'Server error' });
   }
 });
 
-// 3. 添加運動記錄
+// 3. 添加運動記錄 - POST /api/users/:_id/exercises
 app.post('/api/users/:_id/exercises', async (req, res) => {
+  await connectDB();
+  
   try {
     const userId = req.params._id;
     let { description, duration, date } = req.body;
@@ -107,7 +130,7 @@ app.post('/api/users/:_id/exercises', async (req, res) => {
     
     // 創建運動記錄
     const exercise = new Exercise({
-      userId: user._id,
+      userId: user._id.toString(),
       description,
       duration: parseInt(duration),
       date: exerciseDate
@@ -117,7 +140,7 @@ app.post('/api/users/:_id/exercises', async (req, res) => {
     
     // 返回用戶對象加上運動字段
     res.json({
-      _id: user._id,
+      _id: user._id.toString(),
       username: user.username,
       description: exercise.description,
       duration: exercise.duration,
@@ -129,8 +152,10 @@ app.post('/api/users/:_id/exercises', async (req, res) => {
   }
 });
 
-// 4. 獲取用戶運動記錄
+// 4. 獲取用戶運動記錄 - GET /api/users/:_id/logs
 app.get('/api/users/:_id/logs', async (req, res) => {
+  await connectDB();
+  
   try {
     const userId = req.params._id;
     const { from, to, limit } = req.query;
@@ -142,7 +167,7 @@ app.get('/api/users/:_id/logs', async (req, res) => {
     }
     
     // 構建查詢條件
-    let query = { userId: user._id };
+    let query = { userId: user._id.toString() };
     
     // 日期範圍過濾
     if (from || to) {
@@ -160,6 +185,9 @@ app.get('/api/users/:_id/logs', async (req, res) => {
       exercisesQuery = exercisesQuery.limit(parseInt(limit));
     }
     
+    // 排序由新到舊
+    exercisesQuery = exercisesQuery.sort({ date: -1 });
+    
     const exercises = await exercisesQuery.exec();
     
     // 格式化響應
@@ -170,7 +198,7 @@ app.get('/api/users/:_id/logs', async (req, res) => {
     }));
     
     res.json({
-      _id: user._id,
+      _id: user._id.toString(),
       username: user.username,
       count: log.length,
       log: log
@@ -181,10 +209,13 @@ app.get('/api/users/:_id/logs', async (req, res) => {
   }
 });
 
-// 啟動伺服器
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
-
+// Vercel 需要 module.exports
 module.exports = app;
+
+// 本地開發用
+if (require.main === module) {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
+}
