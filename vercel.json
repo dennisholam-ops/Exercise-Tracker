@@ -8,28 +8,8 @@
   ],
   "routes": [
     {
-      "src": "/",
-      "dest": "/server.js"
-    },
-    {
-      "src": "/api/users",
-      "methods": ["GET", "POST"],
-      "dest": "/server.js"
-    },
-    {
-      "src": "/api/users/(.*)/exercises",
-      "dest": "/server.js"
-    },
-    {
-      "src": "/api/users/(.*)/logs",
-      "dest": "/server.js"
-    },
-    {
       "src": "/(.*)",
       "dest": "/server.js"
     }
-  ],
-  "env": {
-    "MONGODB_URI": "@mongodb_uri"
-  }
+  ]
 }
